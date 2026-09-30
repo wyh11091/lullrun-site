@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lullrun - long jobs on your lock screen</title>
+<meta name="description" content="Training, builds, simulations, test suites. Progress on your iPhone lock screen, instant alerts on finish, failure, stall or free GPUs.">
+<style>
+  :root {
+    --bg: #0b0d12; --panel: #141821; --line: #232a36; --text: #e8ecf3; --muted: #97a0b0;
+    --accent: #6ea8ff; --ok: #4fd18b; --bad: #ff6b6b; --warn: #ffc857;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  nav .brand { font-weight: 700; font-size: 18px; letter-spacing: .3px; }
+  nav .links a { color: var(--muted); margin-left: 18px; font-size: 14px; }
+  nav button { margin-left: 18px; background: none; border: 1px solid var(--line); color: var(--text);
+               border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
+  .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; padding: 48px 0 64px; }
+  h1 { font-size: 44px; line-height: 1.15; margin: 0 0 18px; }
+  .sub { color: var(--muted); font-size: 18px; margin: 0 0 28px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-block; padding: 12px 20px; border-radius: 12px; font-weight: 600; }
+  .btn.primary { background: var(--accent); color: #0b0d12; }
+  .btn.ghost { border: 1px solid var(--line); color: var(--text); }
+  .note { color: var(--muted); font-size: 13px; margin-top: 14px; }
+
+  .phone { width: 300px; margin: 0 auto; border-radius: 44px; padding: 14px; background: #000;
+           border: 2px solid #2a2f3a; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen { border-radius: 32px; padding: 18px 12px 22px; min-height: 560px;
+            background: linear-gradient(160deg, #1d2a4a 0%, #16121f 55%, #0c0c10 100%); }
+  .island { width: 110px; height: 30px; background: #000; border-radius: 20px; margin: 0 auto 18px; }
+  .clock { text-align: center; font-size: 64px; font-weight: 300; line-height: 1; }
+  .date { text-align: center; color: #c9d1e0; font-size: 14px; margin: 6px 0 22px; }
+  .card { background: rgba(28,30,38,.82); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px;
+          backdrop-filter: blur(10px); font-size: 13px; }
+  .card .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .card .title { font-weight: 600; }
+  .card .meta { color: var(--muted); font-size: 12px; }
+  .bar { height: 6px; background: #2b3140; border-radius: 3px; margin: 10px 0 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 68%; background: var(--accent); border-radius: 3px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; }
+  .tag.bad { background: rgba(255,107,107,.18); color: var(--bad); }
+  .tag.ok { background: rgba(79,209,139,.18); color: var(--ok); }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 28px; margin: 0 0 24px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+  .box h3 { margin: 0 0 8px; font-size: 17px; }
+  .box p { margin: 0; color: var(--muted); font-size: 15px; }
+  .pain li { margin-bottom: 10px; color: var(--muted); }
+  .pain li b { color: var(--text); font-weight: 600; }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  pre { background: #0f1218; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+        font-size: 13px; overflow-x: auto; margin: 10px 0 0; }
+  .step { font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+  .price .amt { font-size: 28px; font-weight: 700; margin: 6px 0; }
+  .price .amt .meta { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .price ul { padding-left: 18px; margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+  .faq .q { font-weight: 600; margin-top: 16px; }
+  .faq .a { color: var(--muted); }
+  footer { padding: 48px 0 64px; border-top: 1px solid var(--line); text-align: center; }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding-top: 24px; }
+    h1 { font-size: 34px; }
+    .grid, .grid4 { grid-template-columns: 1fr; }
+    nav .links a { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><span class="app"></span></div>
+    <div class="links">
+      <a href="#features" data-i18n="nav_features"></a>
+      <a href="#how" data-i18n="nav_how"></a>
+      <a href="#pricing" data-i18n="nav_pricing"></a>
+      <button id="lang" type="button"></button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <h1 data-i18n="h1"></h1>
+      <p class="sub" data-i18n="sub"></p>
+      <div class="cta">
+        <a class="btn primary form-cn" href="#" data-i18n="cta_cn"></a>
+        <a class="btn ghost form-intl" href="#" data-i18n="cta_intl"></a>
+      </div>
+      <p class="note" data-i18n="cta_note"></p>
+    </div>
+
+    <div class="phone" aria-hidden="true">
+      <div class="screen">
+        <div class="island"></div>
+        <div class="clock">02:14</div>
+        <div class="date" data-i18n="mock_date"></div>
+
+        <div class="card">
+          <div class="row"><span class="title">train_7b.py</span><span class="meta">gpu-node3</span></div>
+          <div class="bar"><i></i></div>
+          <div class="row"><span>step 41,200 / 60,000</span><span>loss 1.873</span></div>
+          <div class="row meta"><span>68%</span><span data-i18n="mock_eta"></span></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><span class="title">sweep_lr.sh</span><span class="tag bad" data-i18n="mock_failed"></span></div>
+          <div class="meta">CUDA out of memory @ step 12,044</div>
+          <div style="margin-top:4px" data-i18n="mock_hint"></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><span class="title">gpu-01</span><span class="tag ok" data-i18n="mock_started"></span></div>
+          <div class="meta" data-i18n="mock_free"></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><span class="title">ctest -j8</span><span class="tag ok">312 / 312</span></div>
+          <div class="meta" data-i18n="mock_build"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2 data-i18n="pain_h"></h2>
+    <ul class="pain">
+      <li data-i18n="pain_1"></li>
+      <li data-i18n="pain_2"></li>
+      <li data-i18n="pain_3"></li>
+      <li data-i18n="pain_4"></li>
+    </ul>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2 data-i18n="feat_h"></h2>
+    <div class="grid">
+      <div class="box"><h3 data-i18n="f1_h"></h3><p data-i18n="f1_p"></p></div>
+      <div class="box"><h3 data-i18n="f2_h"></h3><p data-i18n="f2_p"></p></div>
+      <div class="box"><h3 data-i18n="f3_h"></h3><p data-i18n="f3_p"></p></div>
+      <div class="box"><h3 data-i18n="f4_h"></h3><p data-i18n="f4_p"></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2 data-i18n="how_h"></h2>
+    <div class="grid4">
+      <div class="box"><div class="step">01</div><h3 data-i18n="s1_h"></h3><p data-i18n="s1_p"></p>
+        <pre>curl -fsSL https://<span class="domain"></span>/install.sh | sh</pre></div>
+      <div class="box"><div class="step">02</div><h3 data-i18n="s2_h"></h3><p data-i18n="s2_p"></p>
+        <pre><span class="cli"></span> run -- python train.py
+<span class="cli"></span> attach mysession</pre></div>
+      <div class="box"><div class="step">03</div><h3 data-i18n="s3_h"></h3><p data-i18n="s3_p"></p>
+        <pre><span class="cli"></span> pair</pre></div>
+      <div class="box"><div class="step">04</div><h3 data-i18n="s4_h"></h3><p data-i18n="s4_p"></p>
+        <pre><span class="cli"></span> wait --gpus 2 -- python train.py</pre></div>
+    </div>
+    <div class="box" style="margin-top:16px"><h3 data-i18n="priv_h"></h3><p data-i18n="priv_p"></p></div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2 data-i18n="price_h"></h2>
+    <div class="grid4 price">
+      <div class="box"><h3 data-i18n="p0_h"></h3><div class="amt">$0</div><ul><li data-i18n="p0_1"></li><li data-i18n="p0_2"></li></ul></div>
+      <div class="box"><h3 data-i18n="p1_h"></h3><div class="amt">$12.99<span class="meta" data-i18n="per_year"></span></div><ul><li data-i18n="p1_1"></li><li data-i18n="p1_2"></li><li data-i18n="p1_3"></li></ul></div>
+      <div class="box"><h3 data-i18n="p2_h"></h3><div class="amt">$29.99</div><ul><li data-i18n="p2_1"></li></ul></div>
+      <div class="box"><h3 data-i18n="p3_h"></h3><p data-i18n="p3_p"></p></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <div class="q" data-i18n="q1"></div><div class="a" data-i18n="a1"></div>
+    <div class="q" data-i18n="q2"></div><div class="a" data-i18n="a2"></div>
+    <div class="q" data-i18n="q3"></div><div class="a" data-i18n="a3"></div>
+    <div class="q" data-i18n="q4"></div><div class="a" data-i18n="a4"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <h2 data-i18n="foot_h"></h2>
+    <div class="cta" style="justify-content:center">
+      <a class="btn primary form-cn" href="#" data-i18n="cta_cn"></a>
+      <a class="btn ghost form-intl" href="#" data-i18n="cta_intl"></a>
+    </div>
+    <p class="note">&copy; 2026 <span class="app"></span></p>
+  </div>
+</footer>
+
+<script>
+// ---- edit these before publishing ----
+const APP_NAME = "Lullrun";
+const CLI_NAME = "lr";
+const DOMAIN = "lullrun.dev";
+const FORM_CN = "https://tally.so/r/ODOYgk";
+const FORM_INTL = "https://tally.so/r/Y5NYez";
+// ---------------------------------------
+
+const T = {
+  zh: {
+    nav_features: "功能", nav_how: "工作方式", nav_pricing: "价格",
+    h1: "任务在服务器上跑，<br>进度在你的锁屏上。",
+    sub: "训练、编译、仿真、测试，任何跑很久的命令。完成、失败、卡住、有空卡，第一时间知道；挂了，告诉你为什么。",
+    cta_cn: "加入内测名单（国内）", cta_intl: "Join waitlist (overseas)",
+    cta_note: "预计 2026 年 12 月开放 TestFlight 内测。App 不需要注册账号。",
+    mock_date: "10月1日 星期四", mock_eta: "预计 03:42 完成", mock_failed: "失败",
+    mock_hint: "建议：batch 减半，或开启梯度检查点", mock_started: "已自动启动",
+    mock_free: "2 张卡空闲满 3 分钟，已启动 train_ablation.py", mock_build: "全部通过，用时 41 分钟",
+    pain_h: "你是不是也这样",
+    pain_1: "<b>睡前起了训练，半夜挂了</b>，早上才发现白白空了 6 小时卡。",
+    pain_2: "<b>每隔一小时 SSH 上去</b>看一眼 nvidia-smi 和日志尾巴。",
+    pain_3: "<b>实验室抢卡</b>，靠不停刷新蹲空卡。",
+    pain_4: "<b>跑了一周实验</b>，记不清哪次用了什么参数、哪个 commit。",
+    feat_h: "一个 App，管住长任务的整个过程",
+    f1_h: "锁屏 / 灵动岛实时进度", f1_p: "step、loss、预计完成时间常驻锁屏。编译、测试、仿真也能识别进度。不用解锁，不用开 App。",
+    f2_h: "挂了告诉你为什么", f2_p: "自动识别显存溢出、NCCL 超时、loss 变 NaN、段错误、被系统杀掉、日志长时间没动静，并给出下一步建议。诊断在手机本地完成。",
+    f3_h: "蹲卡自动起任务", f3_p: "设定要几张卡、多少显存，空出来并稳定 3 分钟后自动启动你的命令，手机同步提醒。",
+    f4_h: "自动实验记录", f4_p: "每个任务自动留下命令、git commit、配置、关键指标和结果，可以横向对比，一键导出 Markdown。",
+    how_h: "怎么用",
+    s1_h: "装", s1_p: "单文件，不需要 root。只往外连，跳板机和内网集群也能用。",
+    s2_h: "包住命令", s2_p: "新任务加个前缀；已经在 tmux 里跑的直接接管，不用重启。",
+    s3_h: "扫码配对", s3_p: "终端里出二维码，手机扫一下。没有账号，没有密码。",
+    s4_h: "蹲卡", s4_p: "条件满足自动启动，锁屏同步显示。",
+    priv_h: "隐私", priv_p: "服务器和手机之间端到端加密，中转服务器只能看到密文。中转代码开源，可以自己部署。失败诊断在手机本地的模型上跑，日志不上传。",
+    price_h: "价格（意向价）",
+    p0_h: "免费", p0_1: "1 台服务器、3 个并发任务", p0_2: "普通推送、失败类别",
+    p1_h: "Pro 年付", per_year: " / 年", p1_1: "锁屏 / 灵动岛实时进度", p1_2: "失败诊断、蹲卡自动起", p1_3: "不限服务器、实验记录",
+    p2_h: "Pro 终身", p2_1: "一次买断，包含 Pro 全部功能",
+    p3_h: "内测用户", p3_p: "进 TestFlight 并给过反馈的用户，正式版首发享优惠价。",
+    q1: "支持哪些服务器？", a1: "Linux（x86_64 / arm64）和 macOS。Windows 服务器暂不支持。",
+    q2: "只支持 NVIDIA 吗？", a2: "进度识别和失败诊断与硬件无关。GPU 面板和蹲卡先支持 NVIDIA，其他加速卡按需求排期。",
+    q3: "和企业微信、Bark 推送有什么不同？", a3: "那些只能发一条消息。这里有锁屏实时进度、失败原因、一键停止或重跑、蹲卡和实验记录。",
+    q4: "有安卓版吗？", a4: "先做 iOS。安卓看内测反馈。",
+    foot_h: "想第一批用上？"
+  },
+  en: {
+    nav_features: "Features", nav_how: "How it works", nav_pricing: "Pricing",
+    h1: "Your job runs on the server.<br>Its progress lives on your lock screen.",
+    sub: "Training, builds, simulations, test suites: any long-running command. Know the moment it finishes, fails, stalls, or a GPU frees up. When it crashes, know why.",
+    cta_cn: "加入内测名单（国内）", cta_intl: "Join the waitlist",
+    cta_note: "TestFlight beta expected December 2026. No account required.",
+    mock_date: "Thursday, October 1", mock_eta: "ETA 03:42", mock_failed: "FAILED",
+    mock_hint: "Try: halve the batch size or enable gradient checkpointing", mock_started: "AUTO-STARTED",
+    mock_free: "2 GPUs idle for 3 min, started train_ablation.py", mock_build: "All passed in 41 min",
+    pain_h: "Sound familiar?",
+    pain_1: "<b>You launch a run before bed, it dies at 2 AM</b>, and you find out at 9.",
+    pain_2: "<b>You SSH in every hour</b> just to eyeball nvidia-smi and the log tail.",
+    pain_3: "<b>Shared lab GPUs</b> mean refreshing all day to grab a free card.",
+    pain_4: "<b>After a week of experiments</b> you can't remember which config or commit produced what.",
+    feat_h: "One app for the whole life of a long job",
+    f1_h: "Live progress on the lock screen and Dynamic Island", f1_p: "Step, loss and ETA stay on your lock screen. Builds, test suites and simulations are recognized too. No unlocking, no opening the app.",
+    f2_h: "Know why it failed", f2_p: "Detects CUDA OOM, NCCL timeouts, NaN loss, segfaults, OOM-killer, and silent hangs, then suggests a next step. Diagnosis runs on-device.",
+    f3_h: "Auto-start when GPUs free up", f3_p: "Say how many GPUs and how much memory you need. When they stay free for 3 minutes, your command starts and your phone knows.",
+    f4_h: "Automatic experiment log", f4_p: "Every run records its command, git commit, config, key metrics and outcome. Compare runs side by side and export to Markdown.",
+    how_h: "How it works",
+    s1_h: "Install", s1_p: "Single binary, no root. Outbound-only, so it works behind bastions and on private clusters.",
+    s2_h: "Wrap or attach", s2_p: "Prefix new jobs, or attach to one already running in tmux without restarting it.",
+    s3_h: "Pair", s3_p: "Scan a QR code from your terminal. No account, no password.",
+    s4_h: "Queue for GPUs", s4_p: "Starts when conditions are met, shown live on your lock screen.",
+    priv_h: "Privacy", priv_p: "End-to-end encrypted between your server and your phone; the relay only sees ciphertext. The relay is open source and self-hostable. Failure diagnosis runs on your phone's on-device model; logs are never uploaded.",
+    price_h: "Pricing (planned)",
+    p0_h: "Free", p0_1: "1 server, 3 concurrent jobs", p0_2: "Standard alerts, failure category",
+    p1_h: "Pro yearly", per_year: " / yr", p1_1: "Lock screen and Dynamic Island progress", p1_2: "Failure diagnosis, GPU auto-start", p1_3: "Unlimited servers, experiment log",
+    p2_h: "Pro lifetime", p2_1: "One-time purchase, everything in Pro",
+    p3_h: "Beta testers", p3_p: "TestFlight users who send feedback get a launch discount.",
+    q1: "Which servers are supported?", a1: "Linux (x86_64 / arm64) and macOS. Windows servers are not supported yet.",
+    q2: "NVIDIA only?", a2: "Progress and failure detection are hardware-agnostic. The GPU panel and GPU queue start with NVIDIA; other accelerators based on demand.",
+    q3: "How is this different from ntfy, Bark or a Telegram bot?", a3: "Those send a message. This gives you live lock-screen progress, failure reasons, one-tap stop or rerun, GPU queueing and an experiment log.",
+    q4: "Android?", a4: "iOS first. Android depends on beta feedback.",
+    foot_h: "Want early access?"
+  }
+};
+
+function withSrc(url) {
+  const src = new URLSearchParams(location.search).get("src") || "direct";
+  return url + (url.includes("?") ? "&" : "?") + "src=" + encodeURIComponent(src);
+}
+
+function render(lang) {
+  const t = T[lang];
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.dataset.i18n] || ""; });
+  document.getElementById("lang").textContent = lang === "zh" ? "English" : "中文";
+  localStorage.setItem("lang", lang);
+}
+
+document.querySelectorAll(".app").forEach(el => el.textContent = APP_NAME);
+document.querySelectorAll(".cli").forEach(el => el.textContent = CLI_NAME);
+document.querySelectorAll(".domain").forEach(el => el.textContent = DOMAIN);
+document.querySelectorAll(".form-cn").forEach(el => el.href = withSrc(FORM_CN));
+document.querySelectorAll(".form-intl").forEach(el => el.href = withSrc(FORM_INTL));
+document.title = APP_NAME + " - long jobs on your lock screen";
+
+let lang = localStorage.getItem("lang") || (navigator.language.startsWith("zh") ? "zh" : "en");
+render(lang);
+document.getElementById("lang").onclick = () => { lang = lang === "zh" ? "en" : "zh"; render(lang); };
+</script>
+</body>
+</html>
